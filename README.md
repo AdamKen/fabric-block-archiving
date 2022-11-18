@@ -16,7 +16,7 @@ To use this feature, you need to build hyperledger/fabric-peer container image a
 
 ### Prerequisites
 
-You need to meet the prerequisites described in the official Hyperledger Fabric document. 
+You need to meet the prerequisites described in the official Hyperledger Fabric document.
 
 * [Prerequisites](https://hyperledger-fabric.readthedocs.io/en/master/dev-setup/devenv.html#prerequisites)
 
@@ -33,11 +33,10 @@ Basically you only need to follow the steps described in the following page to s
 
 ### Building container image
 
-You can use prebuild images for containers other than fabric-peer and fabric-blkarchiver-repo. So you don't need to do `make all`, as mentioned in [the document](https://hyperledger-fabric.readthedocs.io/en/master/dev-setup/build.html). You just need to do the following 2 commands.
+You can use prebuild images for containers other than fabric-peer. So you don't need to do `make all`, as mentioned in [the document](https://hyperledger-fabric.readthedocs.io/en/master/dev-setup/build.html). You just need to do the following 2 commands.
 
 ```
 vagrant@ubuntu:~/go/src/github.com/hyperledger/fabric$ make peer-docker
-vagrant@ubuntu:~/go/src/github.com/hyperledger/fabric$ make blkarchiver-repo-docker
 vagrant@ubuntu:~/go/src/github.com/hyperledger/fabric$ make native
 ```
 
@@ -46,10 +45,6 @@ Now you should be able to see the following container images on your local machi
 ```
 vagrant@ubuntu:~/go/src/github.com/hyperledger/fabric$ docker images
 REPOSITORY                            TAG                                  IMAGE ID            CREATED             SIZE
-hyperledger/fabric-blkarchiver-repo   2.0.0-alpha                          129811011d3d        2 hours ago         202MB
-hyperledger/fabric-blkarchiver-repo   amd64-2.0.0-alpha-snapshot-ea48f79   129811011d3d        2 hours ago         202MB
-hyperledger/fabric-blkarchiver-repo   amd64-blkarchiver                    129811011d3d        2 hours ago         202MB
-hyperledger/fabric-blkarchiver-repo   latest                               129811011d3d        2 hours ago         202MB
 hyperledger/fabric-peer               2.0.0-alpha                          5b05d8d79382        2 hours ago         48.1MB
 hyperledger/fabric-peer               amd64-2.0.0-alpha-snapshot-ea48f79   5b05d8d79382        2 hours ago         48.1MB
 hyperledger/fabric-peer               amd64-blkarchiver                    5b05d8d79382        2 hours ago         48.1MB
@@ -71,21 +66,41 @@ vagrant@ubuntu:~/dev$ git clone https://github.com/nekia/fabric-block-archiving-
 vagrant@ubuntu:~/dev$ cd fabric-block-archiving-testenv
 ```
 
-### Add a path of compiled Hyperledger Fabric binaries to PATH 
+### Add a path of compiled Hyperledger Fabric binaries to PATH
 
 In the following demo, a simple Hyperledger Fabric network is actually deployed on your local environment. It's based on fabric-samples/first-network example. You need to setup to enable some Hyperledger Fabric binaries (cryptogen, configtxgen) on your local.
 
 ```
-vagrant@ubuntu:~/dev/fabric-block-archiving-testenv$ export PATH=~/go/src/github.com/hyperledger/fabric/.build/bin:$PATH
+vagrant@ubuntu:~/dev/fabric-block-archiving-testenv$ export PATH=~/go/src/github.com/hyperledger/fabric/build/bin:$PATH
 ```
 
-### Clean up 
+### Modify core.yaml to use archive features.
+
+Edit core.yaml to enable archive features, or use default one to start a standard fabric network.
+
+```
+vagrant@ubuntu:~/dev/fabric-block-archiving-testenv$ vi core.yaml
+
+# edit the part of ledger, make ture it has status like followed:
+
+#ledger:
+# archiving:
+#    archiver:
+#      enable: true
+#    client:
+#      enable: false
+#    keepblocks: 20
+
+```
+
+
+### Clean up
 
 Stop and remove all containers which have been started and also delete all artifacts generated
 
 ```
 vagrant@ubuntu:~/dev/fabric-block-archiving-testenv$ ./byfn.sh down
-vagrant@ubuntu:~/dev/fabric-block-archiving-testenv$ sudo rm -rf ledgers/ ledgers-archived/
+vagrant@ubuntu:~/dev/fabric-block-archiving-testenv$ sudo rm -rf ledgers/
 ```
 
 ### Bring up network
@@ -97,7 +112,7 @@ vagrant@ubuntu:~/dev/fabric-block-archiving-testenv$ ./byfn.sh up -c mychannel
 ```
 
 * Ledger files created on each peer are exposed on host file system ( under ~/dev/fabric-block-archiving-testenv/ledgers )
-* Ledger files archived into a repository node are exposed on host file system ( under ~/dev/fabric-block-archiving-testenv/ledgers-archived )
+* Nodes started by default script will work as normal peer and won't archive any data.
 
 ### Add more channel
 
@@ -143,35 +158,35 @@ You can monitor the number of blockfiles for each org, each channel and each pee
 vagrant@ubuntu:~/dev/fabric-block-archiving-testenv$ watch -n 3 ./scripts/host/checkarchive.sh status
 ==== The number of archived blockfiles on BlockArchiver ====
 mychannel
-  org1: 30
-  org2: 30
+  org1: 0
+  org2: 0
 yourchannel
-  org1: 7
-  org2: 30
+  org1: 0
+  org2: 0
 ==== The number of blockfiles on local file system ====
 mychannel
   org1
-    peer0: 40
-    peer1: 40
+    peer0: 87
+    peer1: 30
     peer2: 0
     peer3: 0
     peer4: 0
   org2
-    peer0: 40
-    peer1: 40
+    peer0: 87
+    peer1: 29
     peer2: 0
     peer3: 0
     peer4: 0
 yourchannel
   org1
-    peer0: 34
-    peer1: 33
+    peer0: 0
+    peer1: 0
     peer2: 0
     peer3: 0
     peer4: 0
   org2
-    peer0: 13
-    peer1: 33
+    peer0: 0
+    peer1: 0
     peer2: 0
     peer3: 0
     peer4: 0
